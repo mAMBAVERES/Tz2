@@ -36,8 +36,8 @@ build_windows_x64:
   script:
     - |
       
-      -dotnet restore
-      -dotnet publish -c Release -r win-x64 --self-contained -o /workspace/publish/win-x64
+      - dotnet restore
+      - dotnet publish -c Release -r win-x64 --self-contained -o /workspace/publish/win-x64
       "
   artifacts:
     paths:
@@ -51,8 +51,8 @@ build_windows_x86:
   stage: build
   script:
     - |
-      -dotnet restore
-      -dotnet publish -c Release -r win-x86 --self-contained -o /workspace/publish/win-x86
+      - dotnet restore
+      - dotnet publish -c Release -r win-x86 --self-contained -o /workspace/publish/win-x86
       "
   artifacts:
     paths:
@@ -73,7 +73,7 @@ test_dotnet:
       artifacts: true
   script:
     - |
-      -dotnet test --configuration Release --logger trx --results-directory TestResults
+      - dotnet test --configuration Release --logger trx --results-directory TestResults
       "
   artifacts:
     when: always
