@@ -9,8 +9,6 @@ stages:
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
-  script:
-    - apk add --no-cache zip bash
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -22,8 +20,8 @@ build_linux_x64:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore SimpleApp.csproj
-    - dotnet publish SimpleApp.csproj -c Release -r linux-x64 --self-contained -o publish/linux-x64
+    - dotnet restore
+    - dotnet publish -c Release -r linux-x64 --self-contained -o publish/linux-x64
   artifacts:
     paths:
       - publish/linux-x64/
@@ -36,8 +34,8 @@ build_windows_x64:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore SimpleApp.csproj
-    - dotnet publish SimpleApp.csproj -c Release -r win-x64 --self-contained -o publish/win-x64
+    - dotnet restore
+    - dotnet publish -c Release -r win-x64 --self-contained -o publish/win-x64
   artifacts:
     paths:
       - publish/win-x64/
@@ -50,8 +48,8 @@ build_windows_x86:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore SimpleApp.csproj
-    - dotnet publish SimpleApp.csproj -c Release -r win-x86 --self-contained -o publish/win-x86
+    - dotnet restore
+    - dotnet publish -c Release -r win-x86 --self-contained -o publish/win-x86
   artifacts:
     paths:
       - publish/win-x86/
@@ -71,8 +69,7 @@ test_dotnet:
     - job: "build_windows_x86"
       artifacts: true
   script:
-    - dotnet restore tests/SimpleApp.Tests/SimpleApp.Tests.csproj
-    - dotnet test tests/SimpleApp.Tests/SimpleApp.Tests.csproj --configuration Release --logger trx --results-directory ./TestResults
+    - dotnet test --configuration Release --logger trx --results-directory TestResults
   artifacts:
     when: always
     paths:
