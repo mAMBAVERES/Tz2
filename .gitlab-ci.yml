@@ -147,7 +147,6 @@ deploy_production:
 
 # Загрузка в MinIO
 upload_artifacts:
-  extends: .docker_job
   stage: upload
   needs:
     - job: build_linux_x64
