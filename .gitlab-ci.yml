@@ -9,6 +9,8 @@ stages:
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
+  script:
+    - apk add --no-cache zip bash
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -69,7 +71,7 @@ test_dotnet:
     - job: "build_windows_x86"
       artifacts: true
   script:
-    - dotnet test --configuration Release --logger trx --results-directory TestResults
+    - dotnet test --configuration Release --logger trx --results-directory ./TestResults
   artifacts:
     when: always
     paths:
