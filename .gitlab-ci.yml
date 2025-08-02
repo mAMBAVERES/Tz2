@@ -22,8 +22,8 @@ build_linux_x64:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore
-    - dotnet publish -c Release -r linux-x64 --self-contained -o publish/linux-x64
+    - dotnet restore SimpleApp.csproj
+    - dotnet publish SimpleApp.csproj -c Release -r linux-x64 --self-contained -o publish/linux-x64
   artifacts:
     paths:
       - publish/linux-x64/
@@ -36,8 +36,8 @@ build_windows_x64:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore
-    - dotnet publish -c Release -r win-x64 --self-contained -o publish/win-x64
+    - dotnet restore SimpleApp.csproj
+    - dotnet publish SimpleApp.csproj -c Release -r win-x64 --self-contained -o publish/win-x64
   artifacts:
     paths:
       - publish/win-x64/
@@ -50,8 +50,8 @@ build_windows_x86:
   stage: build
   image: $DOTNET_IMAGE
   script:
-    - dotnet restore
-    - dotnet publish -c Release -r win-x86 --self-contained -o publish/win-x86
+    - dotnet restore SimpleApp.csproj
+    - dotnet publish SimpleApp.csproj -c Release -r win-x86 --self-contained -o publish/win-x86
   artifacts:
     paths:
       - publish/win-x86/
