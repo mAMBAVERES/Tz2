@@ -71,7 +71,8 @@ test_dotnet:
     - job: "build_windows_x86"
       artifacts: true
   script:
-    - dotnet test --configuration Release --logger trx --results-directory ./TestResults
+    - dotnet restore tests/SimpleApp.Tests/SimpleApp.Tests.csproj
+    - dotnet test tests/SimpleApp.Tests/SimpleApp.Tests.csproj --configuration Release --logger trx --results-directory ./TestResults
   artifacts:
     when: always
     paths:
