@@ -138,7 +138,7 @@ deploy_production:
       when: manual
 
 upload_artifacts:
-  extends: .docker_job
+  stage: upload
   image: alpine:latest
   needs:
     - job: "build_linux_x64"
