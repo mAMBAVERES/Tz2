@@ -137,10 +137,9 @@ deploy_production:
     - if: '$CI_COMMIT_REF_NAME == "main"'
       when: manual
 
-# Загрузка в MinIO
 upload_artifacts:
   extends: .docker_job
-  stage: upload
+  image: alpine:latest
   needs:
     - job: "build_linux_x64"
       artifacts: true
@@ -149,10 +148,15 @@ upload_artifacts:
     - job: "build_windows_x86"
       artifacts: true
   script:
+    - ls -la publish/
+    - ls -la publish/linux-x64/
+    - ls -la publish/win-x64/
+    - ls -la publish/win-x86/
+    - apk add --no-cache zip tar
     - mkdir -p upload
     - tar -czf upload/linux-x64.tar.gz -C publish linux-x64/
-    - cd publish && zip -r ../upload/win-x64.zip win-x64/ && cd ..
-    - cd publish && zip -r ../upload/win-x86.zip win-x86/ && cd ..
+    - zip -r upload/win-x64.zip publish/win-x64/
+    - zip -r upload/win-x86.zip publish/win-x86/
     - |
       if [ -n "$MINIO_ENDPOINT" ]; then
         export MC_HOST_minio="$MINIO_ENDPOINT"
@@ -165,3 +169,4 @@ upload_artifacts:
     paths:
       - upload/
     expire_in: 1 month
+
