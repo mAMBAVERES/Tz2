@@ -18,11 +18,10 @@ variables:
 # Сборка Linux x64
 build_linux_x64:
   stage: build
+  image: $DOTNET_IMAGE
   script:
-    - |
-      - dotnet restore
-      - dotnet publish -c Release -r linux-x64 --self-contained -o /workspace/publish/linux-x64
-      "
+    - dotnet restore
+    - dotnet publish -c Release -r linux-x64 --self-contained -o publish/linux-x64
   artifacts:
     paths:
       - publish/linux-x64/
@@ -33,12 +32,10 @@ build_linux_x64:
 # Сборка Windows x64
 build_windows_x64:
   stage: build
+  image: $DOTNET_IMAGE
   script:
-    - |
-      
-      -dotnet restore
-      -dotnet publish -c Release -r win-x64 --self-contained -o /workspace/publish/win-x64
-      "
+    - dotnet restore
+    - dotnet publish -c Release -r win-x64 --self-contained -o publish/win-x64
   artifacts:
     paths:
       - publish/win-x64/
@@ -49,11 +46,10 @@ build_windows_x64:
 # Сборка Windows x86
 build_windows_x86:
   stage: build
+  image: $DOTNET_IMAGE
   script:
-    - |
-      -dotnet restore
-      -dotnet publish -c Release -r win-x86 --self-contained -o /workspace/publish/win-x86
-      "
+    - dotnet restore
+    - dotnet publish -c Release -r win-x86 --self-contained -o publish/win-x86
   artifacts:
     paths:
       - publish/win-x86/
@@ -64,6 +60,7 @@ build_windows_x86:
 # Тесты
 test_dotnet:
   stage: test
+  image: $DOTNET_IMAGE
   needs:
     - job: "build_linux_x64"
       artifacts: true
@@ -72,9 +69,7 @@ test_dotnet:
     - job: "build_windows_x86"
       artifacts: true
   script:
-    - |
-      -dotnet test --configuration Release --logger trx --results-directory TestResults
-      "
+    - dotnet test --configuration Release --logger trx --results-directory TestResults
   artifacts:
     when: always
     paths:
@@ -118,7 +113,6 @@ deploy_staging:
   script:
     - echo "Деплой в staging"
     - mkdir -p deploy && cp -r publish/linux-x64/* deploy/
-    - передаем на другой хост
   artifacts:
     paths:
       - deploy/
@@ -138,7 +132,6 @@ deploy_production:
   script:
     - echo "Деплой в production"
     - mkdir -p deploy-prod && cp -r publish/* deploy-prod/
-    - так же передаем на другой хост
   artifacts:
     paths:
       - deploy-prod/
@@ -164,10 +157,9 @@ upload_artifacts:
     - cd publish && zip -r ../upload/win-x64.zip win-x64/ && cd ..
     - cd publish && zip -r ../upload/win-x86.zip win-x86/ && cd ..
     - |
-      if [ -n "$MINIO_ENDPOINT" ];
-          -e MC_HOST_minio="$MINIO_ENDPOINT" \
-          minio/mc:latest \
-          mc cp --recursive /workspace/upload/ minio/$MINIO_BUCKET/$CI_COMMIT_REF_NAME/
+      if [ -n "$MINIO_ENDPOINT" ]; then
+        export MC_HOST_minio="$MINIO_ENDPOINT"
+        docker run --rm -e MC_HOST_minio minio/mc:latest mc cp --recursive /workspace/upload/ minio/$MINIO_BUCKET/$CI_COMMIT_REF_NAME/
       else
         echo "Файлы готовы в upload/"
         ls -la upload/
