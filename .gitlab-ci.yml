@@ -8,13 +8,18 @@ stages:
 .docker_job:
   image: docker:24.0.5
   services:
-    - docker:24.0.5-dind
-  script:
+    - name: docker:24.0.5-dind
+      command: ["--tls=false"]
+      privileged: true
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
     - apk add --no-cache zip bash
+  script:
+    # сюда конкретный скрипт job будет подставлен
 
 variables:
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "/certs"
   DOTNET_IMAGE: "mcr.microsoft.com/dotnet/sdk:8.0"
 
 # Сборка Linux x64
@@ -64,14 +69,15 @@ test_dotnet:
   stage: test
   image: $DOTNET_IMAGE
   needs:
-    - job: "build_linux_x64"
+    - job: build_linux_x64
       artifacts: true
-    - job: "build_windows_x64"
+    - job: build_windows_x64
       artifacts: true
-    - job: "build_windows_x86"
+    - job: build_windows_x86
       artifacts: true
   script:
     - dotnet test --configuration Release --logger trx --results-directory ./TestResults
+    - ls -la TestResults || echo "TestResults folder not found"
   artifacts:
     when: always
     paths:
@@ -86,11 +92,11 @@ test_dotnet:
 sign_applications:
   stage: sign
   needs:
-    - job: "build_windows_x64"
+    - job: build_windows_x64
       artifacts: true
-    - job: "build_windows_x86"
+    - job: build_windows_x86
       artifacts: true
-    - job: "test_dotnet"
+    - job: test_dotnet
   script:
     - echo "Подпись приложений"
     - find publish/win-x64 -name "*.exe" -exec echo "Подписываем {}" \;
@@ -107,9 +113,9 @@ sign_applications:
 deploy_staging:
   stage: deploy
   needs:
-    - job: "build_linux_x64"
+    - job: build_linux_x64
       artifacts: true
-    - job: "test_dotnet"
+    - job: test_dotnet
   environment:
     name: staging
   script:
@@ -127,7 +133,7 @@ deploy_production:
   extends: .docker_job
   stage: deploy
   needs:
-    - job: "sign_applications"
+    - job: sign_applications
       artifacts: true
   environment:
     name: production
@@ -147,17 +153,18 @@ upload_artifacts:
   extends: .docker_job
   stage: upload
   needs:
-    - job: "build_linux_x64"
+    - job: build_linux_x64
       artifacts: true
-    - job: "build_windows_x64"
+    - job: build_windows_x64
       artifacts: true
-    - job: "build_windows_x86"
+    - job: build_windows_x86
       artifacts: true
   script:
     - mkdir -p upload
     - tar -czf upload/linux-x64.tar.gz -C publish linux-x64/
     - cd publish && zip -r ../upload/win-x64.zip win-x64/ && cd ..
     - cd publish && zip -r ../upload/win-x86.zip win-x86/ && cd ..
+    - ls -la upload/
     - |
       if [ -n "$MINIO_ENDPOINT" ]; then
         export MC_HOST_minio="$MINIO_ENDPOINT"
